@@ -1,0 +1,14 @@
+from pathlib import Path
+from datetime import datetime
+from typing import Optional
+from .extract_text_from_pdf import extract_text_from_pdf
+from .analyze_pdf_content import analyze_pdf_content
+
+
+def find_date_in_pdf(pdf_path: Path, openai_api_key: str) -> Optional[datetime]:
+    """Main function to find a date in a PDF file."""
+    try:
+        text = extract_text_from_pdf(pdf_path)
+        return analyze_pdf_content(text, openai_api_key)
+    except Exception as e:
+        raise Exception(f"Error processing PDF {pdf_path}: {str(e)}")
