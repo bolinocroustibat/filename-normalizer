@@ -8,7 +8,7 @@ from rich.progress import (
     TaskProgressColumn,
 )
 from rich.console import Console
-from .types import FileWithDate
+from utils.types import File, FileType
 
 T = TypeVar("T")
 
@@ -18,7 +18,7 @@ def scan_directory_with_parser(
     parser: Callable[[str], T | None],
     recursive: bool,
     console: Console,
-) -> list[FileWithDate]:
+) -> list[File]:
     """
     Scan directory for files and apply a parser function to each filename.
 
@@ -29,7 +29,9 @@ def scan_directory_with_parser(
         console: Console object for progress display
 
     Returns:
-        List of FileWithDate objects containing the file path and parsed date information
+        List of File objects containing the file path and parsed information.
+        Files with dates will have date and has_time set.
+        PDF files without dates will have file_type set to PDF and date set to None.
     """
     # Get all files in the directory
     if recursive:
@@ -41,7 +43,8 @@ def scan_directory_with_parser(
     files = [f for f in files if f.is_file()]
 
     # Collect files with matching results
-    matching_files: list[FileWithDate] = []
+    processed_files: list[File] = []
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -56,11 +59,18 @@ def scan_directory_with_parser(
                 # Unpack the tuple if result is a tuple
                 if isinstance(result, tuple):
                     date, has_time = result
-                    matching_files.append(FileWithDate(file_path, date, has_time))
+                    processed_files.append(
+                        File(file_path, FileType.REGULAR, date, has_time)
+                    )
                 else:
                     # This case should not happen with parse_datetime_from_filename
                     # but kept for generic parser compatibility
-                    matching_files.append(FileWithDate(file_path, result, False))
+                    processed_files.append(
+                        File(file_path, FileType.REGULAR, result, False)
+                    )
+            elif file_path.suffix.lower() == ".pdf":
+                # If no date found and it's a PDF, add it as a PDF file
+                processed_files.append(File(file_path, FileType.PDF))
             progress.update(task, advance=1)
 
-    return matching_files
+    return processed_files

@@ -7,22 +7,16 @@ from enum import Enum, auto
 class FileType(Enum):
     """Types of files that can be processed for dates."""
 
-    PDF = auto()
+    REGULAR = auto()  # Regular file with or without date
+    PDF = auto()  # PDF file that might need date extraction
     # Add more file types here as needed
 
 
 @dataclass
-class FileWithDate:
-    """Represents a file that has a date in its filename."""
-
-    path: Path
-    date: datetime
-    has_time: bool
-
-
-@dataclass
-class FileWithNoDate:
-    """Represents a file that doesn't have a date in its filename but might need processing."""
+class File:
+    """Represents a file that might have a date in its filename or need date extraction."""
 
     path: Path
     file_type: FileType
+    date: datetime | None = None
+    has_time: bool = False
