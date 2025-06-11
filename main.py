@@ -1,11 +1,15 @@
 import typer
 from pathlib import Path
 from rich.console import Console
+from dotenv import load_dotenv
 from utils import scan_directory_with_parser
 from utils.types import File
 from utils.summary import print_summary
 from features.files_with_dates import parse_datetime_from_filename
 from features.process_files import process_files
+
+# Load environment variables at startup
+load_dotenv()
 
 app = typer.Typer()
 console = Console()
