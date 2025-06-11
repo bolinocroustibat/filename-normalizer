@@ -19,11 +19,17 @@ def analyze_pdf_content(text: str) -> datetime | None:
             logger.error("OPENAI_API_KEY environment variable is not set")
             raise ValueError("OPENAI_API_KEY environment variable is not set")
 
+        logger.debug(f"Text length: {len(text)} characters")
+        
+        # Skip if no text was extracted
+        if len(text) == 0:
+            logger.info("No text content found in PDF, skipping OpenAI request")
+            return None
+
         logger.debug(f"Using OpenAI model: {OPENAI_API_MODEL}")
         openai.api_key = OPENAI_API_KEY
 
         logger.debug("Sending text to OpenAI for date extraction")
-        logger.debug(f"Text length: {len(text)} characters")
         logger.debug(f"Text preview: {text[:200]}...")  # Show first 200 chars
 
         response = openai.chat.completions.create(
