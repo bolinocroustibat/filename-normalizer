@@ -1,3 +1,5 @@
 .python-version
 .venv/
-.ruff_cache/ 
+.ruff_cache/
+__pycache__/
+*.pyc 

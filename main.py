@@ -1,8 +1,10 @@
 import typer
 from pathlib import Path
 from rich.console import Console
+from datetime import datetime
+from utils import scan_directory_with_parser
 from features.files_with_dates import (
-    scan_directory_for_date_patterns,
+    parse_datetime_from_filename,
     process_matching_files,
     print_summary,
 )
@@ -32,7 +34,9 @@ def main(
         raise typer.Exit(1)
 
     # Scan for files with date patterns
-    matching_files = scan_directory_for_date_patterns(folder, recursive, console)
+    matching_files: list[tuple[Path, datetime, bool]] = scan_directory_with_parser(
+        folder, parse_datetime_from_filename, recursive, console
+    )
 
     if not matching_files:
         console.print("No files with date patterns found.")

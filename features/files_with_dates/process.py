@@ -45,6 +45,7 @@ def process_matching_files(
             skipped_count += 1
 
         # Show progress after each file
+        console.print()  # Add a line break before the progress bar
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
