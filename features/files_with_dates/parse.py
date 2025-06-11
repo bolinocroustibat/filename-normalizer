@@ -8,7 +8,7 @@ def parse_datetime_from_filename(filename: str) -> tuple[datetime, bool] | None:
     This function attempts to extract a date and optionally time from a filename using
     various common date and time patterns. It supports multiple date formats including
     YYYY-MM-DD, DD-MM-YYYY, DD-MM-YY, M-D-YYYY, and M-D-YY, as well as time formats
-    HH:MM:SS and HH:MM.
+    HH:MM:SS, HH.MM.SS, HH-MM-SS, HH_MM_SS, HH:MM, HH.MM, HH-MM, and HH_MM.
 
     Args:
         filename (str): The filename to parse for date and time information.
@@ -30,8 +30,8 @@ def parse_datetime_from_filename(filename: str) -> tuple[datetime, bool] | None:
 
     # Common time patterns in filenames
     time_patterns = [
-        r"(\d{1,2})[.:](\d{2})[.:](\d{2})",  # HH:MM:SS or HH.MM.SS
-        r"(\d{1,2})[.:](\d{2})",  # HH:MM or HH.MM
+        r"(\d{1,2})[.:_-](\d{2})[.:_-](\d{2})",  # HH:MM:SS, HH.MM.SS, HH-MM-SS, HH_MM_SS
+        r"(\d{1,2})[.:_-](\d{2})",  # HH:MM, HH.MM, HH-MM, HH_MM
     ]
 
     # Try date patterns first
