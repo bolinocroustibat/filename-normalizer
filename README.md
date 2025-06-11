@@ -1,59 +1,51 @@
 # Filename Normalizer
 
-A command-line tool to automatically detect and standardize date and time patterns in filenames. This tool helps organize your files by converting various formats into a consistent YYYY-MM-DD or YYYY-MM-DD_HH-MM-SS format.
+A tool to normalize filenames by extracting dates from filenames or PDF content and renaming them to a consistent format.
 
 ## Features
 
-- Detects and standardizes multiple date formats in filenames:
-  - YYYY-MM-DD or YYYY_MM_DD
-  - DD-MM-YYYY or DD_MM_YYYY
-  - DD-MM-YY or DD_MM_YY
-  - M-D-YYYY or M_D_YYYY
-  - M-D-YY or M_D_YY
-- Detects and standardizes time formats:
-  - HH:MM:SS or HH.MM.SS
-  - HH:MM or HH.MM
-- Interactive renaming with confirmation prompts
-- Recursive directory search
-- Preserves original filename while standardizing the date format
-- Color-coded output for better visibility
+- Extract dates from filenames using various date patterns
+- Extract dates from PDF content using OpenAI's GPT-4
+- Rename files to a consistent YYYY-MM-DD format
+- Handle both files with dates in names and PDFs without dates
 
 ## Installation
 
+1. Clone the repository
+2. Install dependencies:
 ```bash
-# Install dependencies
 uv sync
 ```
 
+## Environment Setup
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+# OpenAI API Configuration
+OPENAI_API_KEY=your-api-key-here
+OPENAI_API_MODEL=gpt-4-turbo-preview  # Optional, defaults to gpt-4-turbo-preview
+```
+
+You can get an API key from [OpenAI's platform](https://platform.openai.com/api-keys).
+
 ## Usage
 
-Basic usage:
 ```bash
-uv run main.py /path/to/your/folder
+uv run main.py /path/to/your/folder [--recursive]
 ```
 
-Search in current directory only (non-recursive):
-```bash
-uv run main.py /path/to/your/folder --no-recursive
-```
+Options:
+- `--recursive`, `-r`: Search recursively in subfolders (default: True)
 
-### Example
+## How it works
 
-If you have files like:
-```
-vacation_2023-12-25.jpg
-IMG_25-12-2023_15-30-00.jpg
-photo_12-25-23.jpg
-meeting_2024-01-15_14-30.jpg
-```
-
-The tool will offer to rename them to:
-```
-2023-12-25_vacation.jpg
-2023-12-25_15-30-00_IMG.jpg
-2023-12-25_photo.jpg
-2024-01-15_14-30_meeting.jpg
-```
+1. The tool scans the specified directory for files
+2. For each file:
+   - If it has a date in its name, it will be renamed to YYYY-MM-DD format
+   - If it's a PDF without a date in its name, it will try to extract a date from its content using OpenAI
+3. You'll be prompted to confirm each rename operation
+4. A summary of processed files will be displayed at the end
 
 ## Requirements
 

@@ -1,11 +1,10 @@
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
 from .extract_text_from_pdf import extract_text_from_pdf
 from .analyze_pdf_content import analyze_pdf_content
 
 
-def find_date_in_pdf(pdf_path: Path) -> Optional[datetime]:
+def find_date_in_pdf(pdf_path: Path) -> datetime | None:
     """Main function to find a date in a PDF file."""
     try:
         text: str = extract_text_from_pdf(pdf_path)
