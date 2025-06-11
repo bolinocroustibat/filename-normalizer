@@ -66,11 +66,9 @@ def parse_datetime_from_filename(filename: str) -> tuple[datetime, bool] | None:
                 continue
     return None
 
-def rename_file(file_path: Path, new_datetime: datetime, has_time: bool) -> bool:
-    # Get the original filename without the date
-    filename = file_path.name
-    
-    # Remove the date pattern from the filename
+def clean_filename(filename: str) -> str:
+    """Remove date and time patterns from filename and clean it up."""
+    # Remove date patterns
     date_patterns = [
         r'\d{4}[-_]\d{2}[-_]\d{2}',  # YYYY-MM-DD or YYYY_MM_DD
         r'\d{2}[-_]\d{2}[-_]\d{4}',  # DD-MM-YYYY or DD_MM_YYYY
@@ -103,52 +101,19 @@ def rename_file(file_path: Path, new_datetime: datetime, has_time: bool) -> bool
     # Remove leading underscore if present
     filename = filename.lstrip('_')
     
-    # Create new filename with standardized date format
-    if has_time:
-        new_filename = f"{new_datetime.strftime('%Y-%m-%d_%H-%M-%S')}_{filename}"
-    else:
-        new_filename = f"{new_datetime.strftime('%Y-%m-%d')}_{filename}"
-    
-    new_path = file_path.parent / new_filename
-    
-    # Skip if the new name is identical to the old name
-    if new_filename == file_path.name:
-        return False
-    
-    # Display the full path in color
-    console.print(f"Found file: {file_path.absolute()}", style="bright_blue")
-    
-    # Debug print before confirmation
-    console.print("DEBUG: About to ask for confirmation", style="yellow")
-    
-    if typer.confirm(f"Rename '{file_path.name}' to '{new_filename}'?"):
-        # Debug print after confirmation
-        console.print("DEBUG: User confirmed", style="green")
-        file_path.rename(new_path)
-        console.print(f"Renamed: {file_path.name} → {new_filename}", style="green")
-        return True
-    else:
-        # Debug print after skipping
-        console.print("DEBUG: User skipped", style="yellow")
-        console.print(f"Skipped: {file_path.name}", style="yellow")
-        return False
+    return filename
 
-@app.command()
-def main(
-    folder: Path = typer.Argument(..., help="Folder to search for files with date patterns"),
-    recursive: bool = typer.Option(True, "--recursive", "-r", help="Search recursively in subfolders")
-):
-    """
-    Search for files with date patterns in their names and offer to rename them to YYYY-MM-DD format.
-    """
-    if not folder.exists():
-        console.print(f"Error: Folder '{folder}' does not exist", style="red")
-        raise typer.Exit(1)
+def generate_new_filename(filename: str, new_datetime: datetime, has_time: bool) -> str:
+    """Generate a new filename with standardized date format."""
+    cleaned_filename = clean_filename(filename)
     
-    if not folder.is_dir():
-        console.print(f"Error: '{folder}' is not a directory", style="red")
-        raise typer.Exit(1)
-    
+    if has_time:
+        return f"{new_datetime.strftime('%Y-%m-%d_%H-%M-%S')}_{cleaned_filename}"
+    else:
+        return f"{new_datetime.strftime('%Y-%m-%d')}_{cleaned_filename}"
+
+def scan_directory_for_date_patterns(folder: Path, recursive: bool) -> list[tuple[Path, datetime, bool]]:
+    """Scan directory for files with date patterns and return matching files."""
     # Get all files in the directory
     if recursive:
         files = list(folder.rglob("*"))
@@ -158,7 +123,7 @@ def main(
     # Filter only files (not directories)
     files = [f for f in files if f.is_file()]
     
-    # First pass: collect files with date patterns
+    # Collect files with date patterns
     matching_files = []
     with Progress(
         SpinnerColumn(),
@@ -174,58 +139,16 @@ def main(
                 matching_files.append((file_path, *result))
             progress.update(task, advance=1)
     
-    if not matching_files:
-        console.print("No files with date patterns found.")
-        return
-    
-    # Process matching files
+    return matching_files
+
+def process_matching_files(matching_files: list[tuple[Path, datetime, bool]]) -> tuple[int, int, int]:
+    """Process files that need renaming and return counts of renamed, skipped, and already correct files."""
     renamed_count = 0
     skipped_count = 0
     already_correct = 0
     
     for i, (file_path, new_datetime, has_time) in enumerate(matching_files, 1):
-        # Get the original filename without the date
-        filename = file_path.name
-        
-        # Remove the date pattern from the filename
-        date_patterns = [
-            r'\d{4}[-_]\d{2}[-_]\d{2}',  # YYYY-MM-DD or YYYY_MM_DD
-            r'\d{2}[-_]\d{2}[-_]\d{4}',  # DD-MM-YYYY or DD_MM_YYYY
-            r'\d{2}[-_]\d{2}[-_]\d{2}',   # DD-MM-YY or DD_MM_YY
-            r'\d{1,2}[-_]\d{1,2}[-_]\d{4}',  # M-D-YYYY or M_D_YYYY
-            r'\d{1,2}[-_]\d{1,2}[-_]\d{2}',  # M-D-YY or M_D_YY
-        ]
-        
-        # Remove time patterns
-        time_patterns = [
-            r'\d{1,2}[.:]\d{2}[.:]\d{2}',  # HH:MM:SS or HH.MM.SS
-            r'\d{1,2}[.:]\d{2}',  # HH:MM or HH.MM
-        ]
-        
-        for pattern in date_patterns:
-            # Remove the date pattern and any surrounding spaces or underscores
-            filename = re.sub(r'[\s_]*' + pattern + r'[\s_]*', '', filename)
-        
-        for pattern in time_patterns:
-            # Remove the time pattern and any surrounding spaces or underscores
-            filename = re.sub(r'[\s_]*' + pattern + r'[\s_]*', '', filename)
-        
-        # Clean up any double spaces that might have been left
-        filename = re.sub(r'\s+', ' ', filename)  # Replace multiple spaces with single space
-        filename = filename.strip(' ')  # Remove leading/trailing spaces
-        
-        # Replace spaces with underscores
-        filename = filename.replace(' ', '_')
-        
-        # Remove leading underscore if present
-        filename = filename.lstrip('_')
-        
-        # Create new filename with standardized date format
-        if has_time:
-            new_filename = f"{new_datetime.strftime('%Y-%m-%d_%H-%M-%S')}_{filename}"
-        else:
-            new_filename = f"{new_datetime.strftime('%Y-%m-%d')}_{filename}"
-        
+        new_filename = generate_new_filename(file_path.name, new_datetime, has_time)
         new_path = file_path.parent / new_filename
         
         # Skip if the new name is identical to the old name
@@ -255,12 +178,44 @@ def main(
             task = progress.add_task("Processing files...", total=len(matching_files))
             progress.update(task, completed=i)
     
-    # Print summary
+    return renamed_count, skipped_count, already_correct
+
+def print_summary(renamed_count: int, skipped_count: int, already_correct: int, total_files: int) -> None:
+    """Print a summary of the renaming operations."""
     console.print("\nSummary:", style="bold")
     console.print(f"Files already in correct format: {already_correct}", style="blue")
     console.print(f"Files renamed: {renamed_count}", style="green")
     console.print(f"Files skipped: {skipped_count}", style="yellow")
-    console.print(f"Total files processed: {len(matching_files)}", style="bold")
+    console.print(f"Total files processed: {total_files}", style="bold")
+
+@app.command()
+def main(
+    folder: Path = typer.Argument(..., help="Folder to search for files with date patterns"),
+    recursive: bool = typer.Option(True, "--recursive", "-r", help="Search recursively in subfolders")
+):
+    """
+    Search for files with date patterns in their names and offer to rename them to YYYY-MM-DD format.
+    """
+    if not folder.exists():
+        console.print(f"Error: Folder '{folder}' does not exist", style="red")
+        raise typer.Exit(1)
+    
+    if not folder.is_dir():
+        console.print(f"Error: '{folder}' is not a directory", style="red")
+        raise typer.Exit(1)
+    
+    # Scan for files with date patterns
+    matching_files = scan_directory_for_date_patterns(folder, recursive)
+    
+    if not matching_files:
+        console.print("No files with date patterns found.")
+        return
+    
+    # Process matching files
+    renamed_count, skipped_count, already_correct = process_matching_files(matching_files)
+    
+    # Print summary
+    print_summary(renamed_count, skipped_count, already_correct, len(matching_files))
 
 if __name__ == "__main__":
     app()
