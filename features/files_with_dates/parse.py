@@ -3,6 +3,22 @@ from datetime import datetime
 
 
 def parse_datetime_from_filename(filename: str) -> tuple[datetime, bool] | None:
+    """Parse a datetime from a filename string.
+
+    This function attempts to extract a date and optionally time from a filename using
+    various common date and time patterns. It supports multiple date formats including
+    YYYY-MM-DD, DD-MM-YYYY, DD-MM-YY, M-D-YYYY, and M-D-YY, as well as time formats
+    HH:MM:SS and HH:MM.
+
+    Args:
+        filename (str): The filename to parse for date and time information.
+
+    Returns:
+        tuple[datetime, bool] | None: If a valid date is found, returns a tuple containing:
+            - datetime: The parsed datetime object
+            - bool: True if time was found, False if only date was found
+        Returns None if no valid date pattern is found in the filename.
+    """
     # Common date patterns in filenames
     date_patterns = [
         r"(\d{4})[-_](\d{2})[-_](\d{2})",  # YYYY-MM-DD or YYYY_MM_DD
