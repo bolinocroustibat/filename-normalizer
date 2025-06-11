@@ -1,28 +1,36 @@
 from datetime import datetime
 import openai
 import os
-from rich.console import Console
+from utils import FileLogger
 
 
 # Get OpenAI configuration from environment variables
 OPENAI_API_MODEL = os.getenv("OPENAI_API_MODEL", "gpt-4-turbo-preview")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+# Initialize logger
+logger = FileLogger("pdf_analyzer")
 
-def analyze_pdf_content(text: str, console: Console) -> datetime | None:
+
+def analyze_pdf_content(text: str) -> datetime | None:
     """Analyze PDF content using OpenAI to find relevant dates."""
     try:
         if not OPENAI_API_KEY:
-            console.print("OPENAI_API_KEY environment variable is not set", style="red")
+            logger.error("OPENAI_API_KEY environment variable is not set")
             raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+        logger.debug(f"Text length: {len(text)} characters")
 
         # Skip if no text was extracted
         if len(text) == 0:
-            console.print("No text content found in PDF, skipping OpenAI request", style="yellow")
+            logger.info("No text content found in PDF, skipping OpenAI request")
             return None
 
-        # console.print(f"Using OpenAI model: {OPENAI_API_MODEL}", style="bright_blue")
+        logger.debug(f"Using OpenAI model: {OPENAI_API_MODEL}")
         openai.api_key = OPENAI_API_KEY
+
+        logger.debug("Sending text to OpenAI for date extraction")
+        logger.debug(f"Text preview: {text[:200]}...")  # Show first 200 chars
 
         response = openai.chat.completions.create(
             model=OPENAI_API_MODEL,
@@ -43,19 +51,20 @@ def analyze_pdf_content(text: str, console: Console) -> datetime | None:
         )
 
         result = response.choices[0].message.content.strip()
+        logger.debug(f"OpenAI response: {result}")
 
         if result == "NO_DATE_FOUND":
-            console.print("No date found in the text content", style="yellow")
+            logger.info("No date found in the text content")
             return None
 
         try:
             date = datetime.strptime(result, "%Y-%m-%d")
-            console.print(f"Successfully parsed date: {date.strftime('%Y-%m-%d')}", style="green")
+            logger.success(f"Successfully parsed date: {date.strftime('%Y-%m-%d')}")
             return date
         except ValueError as e:
-            console.print(f"Failed to parse date '{result}': {str(e)}", style="red")
+            logger.error(f"Failed to parse date '{result}': {str(e)}")
             return None
 
     except Exception as e:
-        console.print(f"Error analyzing PDF content: {str(e)}", style="red")
+        logger.error(f"Error analyzing PDF content: {str(e)}")
         raise Exception(f"Error analyzing PDF content: {str(e)}")

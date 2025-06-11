@@ -7,12 +7,14 @@ from utils.types import File
 from utils.summary import print_summary
 from features.files_with_dates import parse_datetime_from_filename
 from features.process_files import process_files
+from utils.logger import FileLogger
 
 # Load environment variables at startup
 load_dotenv()
 
 app = typer.Typer()
 console = Console()
+logger = FileLogger("main")
 
 
 @app.command()
@@ -28,11 +30,11 @@ def main(
     Search for files with date patterns in their names and offer to rename them to YYYY-MM-DD format.
     """
     if not folder.exists():
-        console.print(f"Error: Folder '{folder}' does not exist", style="red")
+        logger.error(f"Folder '{folder}' does not exist")
         raise typer.Exit(1)
 
     if not folder.is_dir():
-        console.print(f"Error: '{folder}' is not a directory", style="red")
+        logger.error(f"'{folder}' is not a directory")
         raise typer.Exit(1)
 
     # Scan for files
@@ -41,7 +43,7 @@ def main(
     )
 
     if not files:
-        console.print("No files found.")
+        logger.info("No files found.")
         return
 
     # Process all files
@@ -51,7 +53,7 @@ def main(
     renamed_count, skipped_count, already_correct = process_files(files, console)
 
     # Print summary
-    print_summary(renamed_count, skipped_count, already_correct, len(files), console)
+    print_summary(renamed_count, skipped_count, already_correct, len(files))
 
 
 if __name__ == "__main__":

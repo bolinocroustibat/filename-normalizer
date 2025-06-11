@@ -15,6 +15,7 @@ from features.files_with_dates import (
 from features.files_with_no_dates.find_date_in_pdf import find_date_in_pdf
 from datetime import datetime
 from pathlib import Path
+from utils.logger import FileLogger
 
 
 def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
@@ -34,79 +35,66 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
             - Number of files that were skipped (user declined or error)
             - Number of files that were already in the correct format
     """
+    logger = FileLogger("file_processor")
     renamed_count = 0
     skipped_count = 0
     already_correct = 0
 
-    # Create a single progress bar that will persist throughout the process
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(bar_width=40),
-        TaskProgressColumn(),
-        console=console,
-        expand=True,
-        refresh_per_second=4,
-    ) as progress:
-        task = progress.add_task("[bold blue]Processing files...", total=len(files))
-        
-        for i, file in enumerate(files, 1):
-            # Update progress before processing each file
-            progress.update(task, completed=i-1)
-            
-            # Get the date either from filename or from PDF content
-            if file.date is not None:
-                # File already has a date from filename
-                date = file.date
-                has_time = file.has_time
-                cleaned_filename = remove_date_patterns_from_filename(file.path.name)
-                progress.console.print(
-                    f"\nFound file with date: {file.path.absolute()}", style="bright_blue"
-                )
-            elif file.file_type == FileType.PDF:
-                # Try to extract date from PDF content
-                progress.console.print(
-                    f"\nFound PDF without date: {file.path.absolute()}", style="bright_blue"
-                )
-                try:
-                    date: datetime | None = find_date_in_pdf(file.path, progress.console)
-                    if date is None:
-                        progress.console.print("No date found in PDF content", style="yellow")
-                        skipped_count += 1
-                        continue
-                    has_time = False  # We don't extract time from PDF content
-                    cleaned_filename = file.path.name  # Keep original filename
-                    progress.console.print(
-                        f"Found date in PDF: {date.strftime('%Y-%m-%d')}", style="green"
-                    )
-                except Exception as e:
-                    progress.console.print(f"Error processing PDF: {str(e)}", style="red")
+    for i, file in enumerate(files, 1):
+        # Get the date either from filename or from PDF content
+        if file.date is not None:
+            # File already has a date from filename
+            date = file.date
+            has_time = file.has_time
+            cleaned_filename = remove_date_patterns_from_filename(file.path.name)
+            logger.info(f"Found file with date: {file.path.absolute()}")
+        elif file.file_type == FileType.PDF:
+            # Try to extract date from PDF content
+            logger.info(f"Found PDF without date: {file.path.absolute()}")
+            try:
+                date: datetime | None = find_date_in_pdf(file.path)
+                if date is None:
+                    logger.warning("No date found in PDF content")
                     skipped_count += 1
                     continue
-            else:
-                # Skip files without dates that aren't PDFs
-                continue
-
-            # Rename files with found dates (either from filename or PDF)
-            new_filename: str = generate_filename(cleaned_filename, date, has_time)
-            new_path: Path = file.path.parent / new_filename
-
-            # Skip if the new name is identical to the old name
-            if new_filename == file.path.name:
-                already_correct += 1
-                continue
-
-            # Temporarily hide the progress bar for the confirmation
-            progress.stop()
-            should_rename = typer.confirm(f"Rename '{file.path.name}' to '{new_filename}'?")
-            progress.start()
-
-            if should_rename:
-                file.path.rename(new_path)
-                progress.console.print(f"Renamed: {file.path.name} → {new_filename}", style="green")
-                renamed_count += 1
-            else:
-                progress.console.print(f"Skipped: {file.path.name}", style="yellow")
+                has_time = False  # We don't extract time from PDF content
+                cleaned_filename = file.path.name  # Keep original filename
+                logger.success(f"Found date in PDF: {date.strftime('%Y-%m-%d')}")
+            except Exception as e:
+                logger.error(f"Error processing PDF: {str(e)}")
                 skipped_count += 1
+                continue
+        else:
+            # Skip files without dates that aren't PDFs
+            continue
+
+        # Rename files with found dates (either from filename or PDF)
+        new_filename: str = generate_filename(cleaned_filename, date, has_time)
+        new_path: Path = file.path.parent / new_filename
+
+        # Skip if the new name is identical to the old name
+        if new_filename == file.path.name:
+            already_correct += 1
+            continue
+
+        if typer.confirm(f"Rename '{file.path.name}' to '{new_filename}'?"):
+            file.path.rename(new_path)
+            logger.success(f"Renamed: {file.path.name} → {new_filename}")
+            renamed_count += 1
+        else:
+            logger.warning(f"Skipped: {file.path.name}")
+            skipped_count += 1
+
+        # Show progress after each file
+        console.print()  # Add a line break before the progress bar
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Processing files...", total=len(files))
+            progress.update(task, completed=i)
 
     return renamed_count, skipped_count, already_correct
