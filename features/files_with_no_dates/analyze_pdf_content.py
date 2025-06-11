@@ -1,12 +1,19 @@
 from datetime import datetime
 import openai
 from typing import Optional
+import os
 
 
-def analyze_pdf_content(text: str, openai_api_key: str) -> Optional[datetime]:
+# Get OpenAI API key from environment variable
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+
+def analyze_pdf_content(text: str) -> Optional[datetime]:
     """Analyze PDF content using OpenAI to find relevant dates."""
     try:
-        openai.api_key = openai_api_key
+        openai.api_key = OPENAI_API_KEY
 
         response = openai.chat.completions.create(
             model="gpt-4-turbo-preview",  # Using the latest model for best results
