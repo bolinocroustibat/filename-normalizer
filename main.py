@@ -183,7 +183,7 @@ def main(
     skipped_count = 0
     already_correct = 0
     
-    for file_path, new_datetime, has_time in matching_files:
+    for i, (file_path, new_datetime, has_time) in enumerate(matching_files, 1):
         # Get the original filename without the date
         filename = file_path.name
         
@@ -243,6 +243,17 @@ def main(
         else:
             console.print(f"Skipped: {file_path.name}", style="yellow")
             skipped_count += 1
+        
+        # Show progress after each file
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Processing files...", total=len(matching_files))
+            progress.update(task, completed=i)
     
     # Print summary
     console.print("\nSummary:", style="bold")
