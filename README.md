@@ -40,7 +40,7 @@ uv run main.py /path/to/your/folder [--recursive]
 ```
 
 Options:
-- `--recursive`, `-r`: Search recursively in subfolders (default: True)
+- `--recursive`, `-r`: Search recursively in subfolders (default: False)
 
 ## How it works
 

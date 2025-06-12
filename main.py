@@ -21,7 +21,7 @@ def main(
         ..., help="Folder to search for files with date patterns"
     ),
     recursive: bool = typer.Option(
-        True, "--recursive", "-r", help="Search recursively in subfolders"
+        False, "--recursive", "-r", help="Search recursively in subfolders"
     ),
 ):
     """
