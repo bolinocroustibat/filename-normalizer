@@ -1,3 +1,14 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#     "typer",
+#     "rich",
+#     "python-dotenv",
+#     "openai",
+#     "PyPDF2",
+# ]
+# ///
+
 import typer
 from pathlib import Path
 from rich.console import Console

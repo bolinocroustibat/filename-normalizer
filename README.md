@@ -9,13 +9,14 @@ A tool to normalize filenames by extracting dates from filenames or PDF content 
 - Rename files to a consistent YYYY-MM-DD format
 - Handle both files with dates in names and PDFs without dates
 - Colored logging output with configurable log levels
+- Self-executable script with uv
 
 ## Installation
 
 1. Clone the repository
-2. Install dependencies:
+2. Make the script executable:
 ```bash
-uv sync
+chmod +x main.py
 ```
 
 ## Environment Setup
@@ -35,6 +36,12 @@ You can get an API key from [OpenAI's platform](https://platform.openai.com/api-
 
 ## Usage
 
+You can run the script directly:
+```bash
+./main.py /path/to/your/folder [--recursive]
+```
+
+Or using uv:
 ```bash
 uv run main.py /path/to/your/folder [--recursive]
 ```
@@ -65,8 +72,7 @@ The tool provides detailed logging with colored output:
 ## Requirements
 
 - Python 3.10 or higher
-- typer
-- ruff (for development)
+- uv (for running the script)
 
 ## License
 
