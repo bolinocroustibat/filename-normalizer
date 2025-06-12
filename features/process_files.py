@@ -42,11 +42,13 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
+        BarColumn(bar_width=40),
         TaskProgressColumn(),
         console=console,
+        expand=True,
+        refresh_per_second=4,
     ) as progress:
-        task = progress.add_task("Processing files...", total=len(files))
+        task = progress.add_task("[bold blue]Processing files...", total=len(files))
         
         for i, file in enumerate(files, 1):
             # Update progress before processing each file
@@ -67,7 +69,7 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
                     f"\nFound PDF without date: {file.path.absolute()}", style="bright_blue"
                 )
                 try:
-                    date: datetime | None = find_date_in_pdf(file.path)
+                    date: datetime | None = find_date_in_pdf(file.path, progress.console)
                     if date is None:
                         progress.console.print("No date found in PDF content", style="yellow")
                         skipped_count += 1
