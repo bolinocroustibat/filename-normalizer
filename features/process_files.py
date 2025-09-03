@@ -12,12 +12,14 @@ from utils.types import File, FileType
 from features.files_with_dates import (
     remove_date_patterns_from_filename,
 )
-from features.files_with_no_dates.find_date_in_pdf import find_date_in_pdf
+from features.files_with_no_dates.get_date_from_pdf import get_date_from_pdf
 from datetime import datetime
 from pathlib import Path
 
 
-def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
+def process_files(
+    files: list[File], console: Console, dry_run: bool
+) -> tuple[int, int, int]:
     """Process files that need renaming and return counts of renamed, skipped, and already correct files.
 
     This function handles both files with dates in their names and PDF files without dates.
@@ -49,11 +51,11 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
         refresh_per_second=4,
     ) as progress:
         task = progress.add_task("[bold blue]Processing files...", total=len(files))
-        
+
         for i, file in enumerate(files, 1):
             # Update progress before processing each file
-            progress.update(task, completed=i-1)
-            
+            progress.update(task, completed=i - 1)
+
             # Get the date either from filename or from PDF content
             if file.date is not None:
                 # File already has a date from filename
@@ -61,17 +63,23 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
                 has_time = file.has_time
                 cleaned_filename = remove_date_patterns_from_filename(file.path.name)
                 progress.console.print(
-                    f"\nFound file with date: {file.path.absolute()}", style="bright_blue"
+                    f"\nFound file with date: {file.path.absolute()}",
+                    style="bright_blue",
                 )
             elif file.file_type == FileType.PDF:
                 # Try to extract date from PDF content
                 progress.console.print(
-                    f"\nFound PDF without date: {file.path.absolute()}", style="bright_blue"
+                    f"\nFound PDF without date: {file.path.absolute()}",
+                    style="bright_blue",
                 )
                 try:
-                    date: datetime | None = find_date_in_pdf(file.path, progress.console)
+                    date: datetime | None = get_date_from_pdf(
+                        file.path, progress.console
+                    )
                     if date is None:
-                        progress.console.print("No date found in PDF content", style="yellow")
+                        progress.console.print(
+                            "No date found in PDF content", style="yellow"
+                        )
                         skipped_count += 1
                         continue
                     has_time = False  # We don't extract time from PDF content
@@ -80,7 +88,9 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
                         f"Found date in PDF: {date.strftime('%Y-%m-%d')}", style="green"
                     )
                 except Exception as e:
-                    progress.console.print(f"Error processing PDF: {str(e)}", style="red")
+                    progress.console.print(
+                        f"Error processing PDF: {str(e)}", style="red"
+                    )
                     skipped_count += 1
                     continue
             else:
@@ -98,12 +108,17 @@ def process_files(files: list[File], console: Console) -> tuple[int, int, int]:
 
             # Temporarily hide the progress bar for the confirmation
             progress.stop()
-            should_rename = typer.confirm(f"Rename '{file.path.name}' to '{new_filename}'?")
+            should_rename = typer.confirm(
+                f"Rename '{file.path.name}' to '{new_filename}'?"
+            )
             progress.start()
 
             if should_rename:
-                file.path.rename(new_path)
-                progress.console.print(f"Renamed: {file.path.name} → {new_filename}", style="green")
+                if dry_run:
+                    file.path.rename(new_path)
+                progress.console.print(
+                    f"Renamed: {file.path.name} → {new_filename}", style="green"
+                )
                 renamed_count += 1
             else:
                 progress.console.print(f"Skipped: {file.path.name}", style="yellow")

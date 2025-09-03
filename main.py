@@ -34,6 +34,9 @@ def main(
     recursive: bool = typer.Option(
         False, "--recursive", "-r", help="Search recursively in subfolders"
     ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-r", help="Dry run / doesn't rename files"
+    ),
 ):
     """
     Search for files with date patterns in their names and offer to rename them to YYYY-MM-DD format.
@@ -59,7 +62,9 @@ def main(
     renamed_count: int
     skipped_count: int
     already_correct: int
-    renamed_count, skipped_count, already_correct = process_files(files, console)
+    renamed_count, skipped_count, already_correct = process_files(
+        files, console, dry_run
+    )
 
     # Print summary
     print_summary(renamed_count, skipped_count, already_correct, len(files), console)

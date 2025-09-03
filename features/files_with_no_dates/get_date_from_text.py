@@ -9,17 +9,12 @@ OPENAI_API_MODEL = os.getenv("OPENAI_API_MODEL", "gpt-4-turbo-preview")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
-def analyze_pdf_content(text: str, console: Console) -> datetime | None:
+def get_date_from_text(text: str, console: Console) -> datetime | None:
     """Analyze PDF content using OpenAI to find relevant dates."""
     try:
         if not OPENAI_API_KEY:
             console.print("OPENAI_API_KEY environment variable is not set", style="red")
             raise ValueError("OPENAI_API_KEY environment variable is not set")
-
-        # Skip if no text was extracted
-        if len(text) == 0:
-            console.print("No text content found in PDF, skipping OpenAI request", style="yellow")
-            return None
 
         # console.print(f"Using OpenAI model: {OPENAI_API_MODEL}", style="bright_blue")
         openai.api_key = OPENAI_API_KEY
@@ -50,7 +45,9 @@ def analyze_pdf_content(text: str, console: Console) -> datetime | None:
 
         try:
             date = datetime.strptime(result, "%Y-%m-%d")
-            console.print(f"Successfully parsed date: {date.strftime('%Y-%m-%d')}", style="green")
+            console.print(
+                f"Successfully parsed date: {date.strftime('%Y-%m-%d')}", style="green"
+            )
             return date
         except ValueError as e:
             console.print(f"Failed to parse date '{result}': {str(e)}", style="red")
