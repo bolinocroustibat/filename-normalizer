@@ -38,16 +38,17 @@ You can get an API key from [OpenAI's platform](https://platform.openai.com/api-
 
 You can run the script directly:
 ```bash
-./main.py /path/to/your/folder [--recursive]
+./main.py /path/to/your/folder [--recursive] [--dry-run]
 ```
 
 Or using uv:
 ```bash
-uv run main.py /path/to/your/folder [--recursive]
+uv run main.py /path/to/your/folder [--recursive] [--dry-run]
 ```
 
 Options:
 - `--recursive`, `-r`: Search recursively in subfolders (default: False)
+- `--dry-run`, `-d`: Dry run mode - shows what would be renamed without actually renaming files (default: False)
 
 ## How it works
 
