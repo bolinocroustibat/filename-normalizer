@@ -35,7 +35,7 @@ def main(
         False, "--recursive", "-r", help="Search recursively in subfolders"
     ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", "-r", help="Dry run / doesn't rename files"
+        False, "--dry-run", "-d", help="Dry run / doesn't rename files"
     ),
 ):
     """
