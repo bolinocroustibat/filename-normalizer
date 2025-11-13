@@ -19,25 +19,29 @@ def get_date_from_text_with_openai(text: str, console: Console) -> datetime | No
         # console.print(f"Using OpenAI model: {OPENAI_API_MODEL}", style="bright_blue")
         openai.api_key = OPENAI_API_KEY
 
-        response = openai.chat.completions.create(
+        # Use Responses API with minimal reasoning and low verbosity
+        response = openai.responses.create(
             model=OPENAI_API_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a date extraction assistant. Your task is to:
-                1. Analyze the text content
-                2. Find the most relevant date that could be used for the document
-                3. Return ONLY the date in YYYY-MM-DD format
-                4. If no clear date is found, return 'NO_DATE_FOUND'
-                5. If multiple dates are found, return the most relevant one (usually the most recent or the document's date)
-                6. Do not include any explanation, just the date or NO_DATE_FOUND""",
-                },
-                {"role": "user", "content": text},
-            ],
-            temperature=0.1,  # Low temperature for more consistent results
-        )
+            input=f"""You are a date extraction assistant. Your task is to:
+1. Analyze the text content
+2. Find the most relevant date that could be used for the document
+3. Return ONLY the date in YYYY-MM-DD format
+4. If no clear date is found, return 'NO_DATE_FOUND'
+5. If multiple dates are found, return the most relevant one (usually the most recent or the document's date)
+6. Do not include any explanation, just the date or NO_DATE_FOUND
 
-        result = response.choices[0].message.content.strip()
+Text content:
+{text}""",
+            reasoning={"effort": "minimal"},  # Fast and cost-effective for simple tasks
+            text={"verbosity": "low"},  # We only need YYYY-MM-DD, no explanations
+        )
+        result = response.output[0].content if response.output else None
+        if result:
+            result = result.strip()
+
+        if not result:
+            console.print("No response from OpenAI", style="yellow")
+            return None
 
         if result == "NO_DATE_FOUND":
             console.print("No date found in the text content", style="yellow")
