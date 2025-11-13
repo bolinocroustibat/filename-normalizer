@@ -21,9 +21,11 @@ def get_date_from_pdf_with_openai(pdf_path: Path, console: Console) -> datetime 
         if not OPENAI_API_KEY:
             console.print("OPENAI_API_KEY environment variable is not set", style="red")
             raise ValueError("OPENAI_API_KEY environment variable is not set")
-        
+
         if not OPENAI_API_MODEL:
-            console.print("OPENAI_API_MODEL environment variable is not set", style="red")
+            console.print(
+                "OPENAI_API_MODEL environment variable is not set", style="red"
+            )
             raise ValueError("OPENAI_API_MODEL environment variable is not set")
 
         console.print(
@@ -45,10 +47,15 @@ def get_date_from_pdf_with_openai(pdf_path: Path, console: Console) -> datetime 
                     raise Exception("File upload failed")
                 wait_count += 1
                 if wait_count % 5 == 0:  # Log every 5 seconds
-                    console.print(f"File status: {uploaded_file.status} (waiting {wait_count}s)...", style="dim")
+                    console.print(
+                        f"File status: {uploaded_file.status} (waiting {wait_count}s)...",
+                        style="dim",
+                    )
                 time.sleep(1)
                 uploaded_file = openai.files.retrieve(uploaded_file.id)
-            console.print(f"File processed successfully (took {wait_count}s)", style="green")
+            console.print(
+                f"File processed successfully (took {wait_count}s)", style="green"
+            )
 
             # Use Chat Completions API with file attachment
             console.print("Processing PDF with OpenAI Chat Completions...", style="dim")
@@ -96,9 +103,7 @@ def get_date_from_pdf_with_openai(pdf_path: Path, console: Console) -> datetime 
                 )
                 return date
             except ValueError as e:
-                console.print(
-                    f"Failed to parse date '{result}': {str(e)}", style="red"
-                )
+                console.print(f"Failed to parse date '{result}': {str(e)}", style="red")
                 return None
         finally:
             # Clean up: delete the uploaded file

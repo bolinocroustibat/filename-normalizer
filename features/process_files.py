@@ -121,7 +121,8 @@ def process_files(
                     )
                 else:
                     progress.console.print(
-                        f"Would have renamed: {file.path.name} → {new_filename}", style="green"
+                        f"Would have renamed: {file.path.name} → {new_filename}",
+                        style="green",
                     )
                 renamed_count += 1
             else:
