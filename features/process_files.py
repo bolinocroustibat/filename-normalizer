@@ -114,11 +114,15 @@ def process_files(
             progress.start()
 
             if should_rename:
-                if dry_run:
+                if not dry_run:
                     file.path.rename(new_path)
-                progress.console.print(
-                    f"Renamed: {file.path.name} → {new_filename}", style="green"
-                )
+                    progress.console.print(
+                        f"Renamed: {file.path.name} → {new_filename}", style="green"
+                    )
+                else:
+                    progress.console.print(
+                        f"Would have renamed: {file.path.name} → {new_filename}", style="green"
+                    )
                 renamed_count += 1
             else:
                 progress.console.print(f"Skipped: {file.path.name}", style="yellow")
