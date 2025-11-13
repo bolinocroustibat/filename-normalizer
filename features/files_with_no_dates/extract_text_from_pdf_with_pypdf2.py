@@ -4,8 +4,8 @@ import warnings
 from rich.console import Console
 
 
-def extract_text_from_pdf(pdf_path: Path, console: Console) -> str:
-    """Extract text content from a PDF file."""
+def extract_text_from_pdf_with_pypdf2(pdf_path: Path, console: Console) -> str:
+    """Extract text content from a PDF file using PyPDF2."""
     try:
         # console.print(f"Opening PDF file: {pdf_path}", style="bright_blue")
         # Suppress PyPDF2 encoding warnings

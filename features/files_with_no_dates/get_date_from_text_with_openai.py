@@ -5,12 +5,12 @@ from rich.console import Console
 
 
 # Get OpenAI configuration from environment variables
-OPENAI_API_MODEL = os.getenv("OPENAI_API_MODEL", "gpt-4-turbo-preview")
+OPENAI_API_MODEL = os.getenv("OPENAI_API_MODEL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
-def get_date_from_text(text: str, console: Console) -> datetime | None:
-    """Analyze PDF content using OpenAI to find relevant dates."""
+def get_date_from_text_with_openai(text: str, console: Console) -> datetime | None:
+    """Analyze text content using OpenAI to find relevant dates."""
     try:
         if not OPENAI_API_KEY:
             console.print("OPENAI_API_KEY environment variable is not set", style="red")

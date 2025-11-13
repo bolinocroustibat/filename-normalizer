@@ -26,7 +26,7 @@ Create a `.env` file in the project root with the following variables:
 ```env
 # OpenAI API Configuration
 OPENAI_API_KEY=your-api-key-here
-OPENAI_API_MODEL=gpt-4-turbo-preview  # Optional, defaults to gpt-4-turbo-preview
+OPENAI_API_MODEL=gpt-4o  # Optional, defaults to gpt-4o
 
 # Logging Configuration
 LOG_LEVEL=INFO  # Optional, defaults to INFO. Can be DEBUG, INFO, WARNING, ERROR
